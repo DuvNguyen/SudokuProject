@@ -55,7 +55,7 @@ def draw_circle(screen, text, x, y, inactive_color, active_color, radius, img):
 def draw_exercise():
     return
 
-def draw(window):
+def draw_number_and_new_game_button(window):
     # Vẽ các số từ 1->9 và Nút  NewGame
     draw_button(window, '1', 1030, 230, width_number, height_number, before_event_color, after_event_color, border_radius_number,textcolor,textsize)
     draw_button(window, '2', 1230, 230, width_number, height_number, before_event_color, after_event_color, border_radius_number,textcolor,textsize)
@@ -102,25 +102,31 @@ def define_control_grid(grid):
     for i in range(9):
         for j in range(9):
             if grid[i][j] != 0:
-                control_grid[i][j] = -1  # Sửa lại từ control_gird thành control_grid
+                control_grid[i][j] = -1  
             else:
                 control_grid[i][j] = 0
-    return control_grid  # Trả về control_grid
+    return control_grid
 
-control_grid = tuple(define_control_grid(grid))
+control_grid = define_control_grid(grid)
 
-
+# hàm in số lên màn hình
 def draw_numbers(screen):
-    # Sử dụng định dạng font giống như các ô phụ bên phải
     font = pygame.font.SysFont(None, 90)  # Kích thước font là 90
     for i in range(9):
         for j in range(9):
             number = grid[i][j]
             if number != 0:  # Kiểm tra nếu ô không rỗng
-                text_surf = font.render(str(number), True, (0, 0, 0))  # Màu chữ là đen
+                # Đặt màu tương ứng dựa trên trạng thái của control_grid
+                if control_grid[i][j] == -1:
+                    text_color = (0, 25, 51)  # Màu xám cho các ô không thể thay đổi
+                elif control_grid[i][j] == -2:
+                    text_color = (0, 76, 153)  # Màu cho các số đã điền
+                else:
+                    text_color = (0, 0, 0)  # Màu đen cho các ô trống
+
+                text_surf = font.render(str(number), True, text_color)
                 text_rect = text_surf.get_rect(center=(j * 100 + 80, i * 100 + 80))  # Tính vị trí trung tâm
                 screen.blit(text_surf, text_rect)  # Vẽ số lên màn hình
-
 
 #
 GRID_SIZE = 9
@@ -166,20 +172,57 @@ def insert_into_grid(value, row, col):
         else:
             pass
 
-# hàm xóa giá trị đã điền vào ma trận
-def delete_from_grid(row, col):
-    """
-    Xóa giá trị trong control_grid tại vị trí (row, col).
-    """
-    # Giả sử control_grid là một ma trận 9x9 và giá trị trống là None
-    if (0 <= row < 9 and 0 <= col < 9) & (control_grid[row][col] == -2):  # Kiểm tra xem vị trí có hợp lệ không
-        control_grid[row][col] = 0  # Đặt ô về giá trị trống
+# nhận biết phím chức năng được bấm
+def get_clicked_circle(mouse_pos):
+    click = pygame.mouse.get_pressed()
+
+    # Danh sách chứa thông tin của các nút (tọa độ x, y, bán kính, tên nút)
+    circle_buttons = [
+        (1120, 100, 45, 'delete'),  # Tọa độ và bán kính của nút delete
+        (1320, 100, 45, 'return'),  # Tọa độ và bán kính của nút return
+        (1520, 100, 45, 'idea')     # Tọa độ và bán kính của nút idea
+    ]
+
+    if click[0] == 1:  # Nếu nhấn chuột trái
+        for button in circle_buttons:
+            x, y, radius, name = button
+            # Tính khoảng cách từ vị trí chuột tới tâm của nút
+            distance = math.sqrt((mouse_pos[0] - x) ** 2 + (mouse_pos[1] - y) ** 2)
+            if distance < radius:  # Kiểm tra nếu khoảng cách nhỏ hơn bán kính
+                # print(f'Bạn đã bấm vào nút {name}')
+                return name  # Trả về tên của nút đã bấm
+
+    return None  # Nếu không bấm vào nút nào
+
+# hàm test nút delete
+def change(row, col):
+    if row is not None and col is not None:
         grid[row][col] = 0
-        print(f"Đã xóa giá trị tại ô ({row}, {col})")
-    else:
-        print(f"Vị trí ({row}, {col}) không hợp lệ.")
+        control_grid[row][col] = 0
 
+# các hàm xử lý nút trò chơi mới
+def get_clicked_new_game(mouse_pos):
+    click = pygame.mouse.get_pressed()
 
+    # Thông tin về nút "New Game"
+    new_game_x = 1030
+    new_game_y = 830
+    new_game_width = 580
+    new_game_height = 100
 
+    if click[0] == 1:  # Nếu nhấn chuột trái
+        if new_game_x + new_game_width > mouse_pos[0] > new_game_x and new_game_y + new_game_height > mouse_pos[1] > new_game_y:
+            print('Bạn đã bấm vào nút New Game')
+            return True  # Trả về True nếu nút được nhấn
+
+    return False  # Nếu không nhấn vào nút "New Game", trả về False
+
+def set_new_game():
+    global grid, control_grid  # Đảm bảo bạn có quyền truy cập vào biến toàn cục
+    # Sinh lại đề mới (sử dụng dữ liệu từ file hoặc tạo mới)
+    b = numpy.load('data.npz')['data']
+    test_code = random.randint(1, 10000)
+    grid = b[test_code].tolist()
+    control_grid = define_control_grid(grid)  # Cập nhật control_grid theo đề mới
 
 
