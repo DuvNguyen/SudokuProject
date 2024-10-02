@@ -73,6 +73,10 @@ def desktop():
                     if button_clicked == "delete":
                         change(row, col)  # Gọi hàm để xóa giá trị
                         print(f"Đã xóa giá trị tại ô ({row}, {col})")
+                    if button_clicked == "answer":
+                        # Xử lý sự kiện show đáp án ở đây
+                        pass
+
 
                 new_game_clicked = get_clicked_new_game(event.pos)
                 if new_game_clicked:

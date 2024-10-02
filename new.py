@@ -70,10 +70,10 @@ def draw_number_and_new_game_button(window):
     # vẽ nút xóa quay lại
     img_delete = pygame.image.load('Image/delete.png').convert_alpha()
     img_return = pygame.image.load('Image/return.png').convert_alpha()
-    img_idea = pygame.image.load('Image/idea.png').convert_alpha()
+    img_idea = pygame.image.load('Image/answer.png').convert_alpha()
     draw_circle(window,'DELETE',1120,100,before_event_color,after_event_color,45,img_delete)
     draw_circle(window, 'RETURN', 1320, 100, before_event_color, after_event_color, 45,img_return)
-    draw_circle(window, 'IDEA', 1520, 100, before_event_color, after_event_color, 45,img_idea)
+    draw_circle(window, 'ANSWER', 1520, 100, before_event_color, after_event_color, 45,img_idea)
 
 # Điền số
 # Sudoku grid matrix (9x9), 0 means empty, 1-9 are the numbers to be printed
@@ -180,7 +180,7 @@ def get_clicked_circle(mouse_pos):
     circle_buttons = [
         (1120, 100, 45, 'delete'),  # Tọa độ và bán kính của nút delete
         (1320, 100, 45, 'return'),  # Tọa độ và bán kính của nút return
-        (1520, 100, 45, 'idea')     # Tọa độ và bán kính của nút idea
+        (1520, 100, 45, 'answer')     # Tọa độ và bán kính của nút idea
     ]
 
     if click[0] == 1:  # Nếu nhấn chuột trái
