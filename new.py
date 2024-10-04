@@ -15,7 +15,6 @@ textsize = 150
 
 def draw_button(screen, text, x, y, w, h, inactive_color, active_color, radius,text_color,text_size):
     mouse = pygame.mouse.get_pos()
-    click = pygame.mouse.get_pressed()
 
     # Kiểm tra nếu con trỏ chuột đang nằm trong nút
     if x + w > mouse[0] > x and y + h > mouse[1] > y:
@@ -72,7 +71,7 @@ def draw_number_and_new_game_button(window):
     img_return = pygame.image.load('Image/return.png').convert_alpha()
     img_idea = pygame.image.load('Image/answer.png').convert_alpha()
     draw_circle(window,'DELETE',1120,100,before_event_color,after_event_color,45,img_delete)
-    draw_circle(window, 'RETURN', 1320, 100, before_event_color, after_event_color, 45,img_return)
+    draw_circle(window, 'HINT', 1320, 100, before_event_color, after_event_color, 45,img_return)
     draw_circle(window, 'ANSWER', 1520, 100, before_event_color, after_event_color, 45,img_idea)
 
 # Điền số
@@ -81,7 +80,7 @@ def draw_number_and_new_game_button(window):
 # Sinh đề
 b = numpy.load('data.npz')['data']
 
-test_code = random.randint(1, 10000)
+test_code = random.randint(1, 5000)
 
 grid = b[test_code].tolist()
 # grid = [
@@ -110,17 +109,34 @@ def define_control_grid(grid):
 control_grid = define_control_grid(grid)
 
 # hàm in số lên màn hình
-def draw_numbers(screen):
+def draw_numbers(screen,selected = None):
     font = pygame.font.SysFont(None, 90)  # Kích thước font là 90
     for i in range(9):
         for j in range(9):
+            color = 'white'
+            # Nếu có ô được chọn
+            if selected:
+                selected_row, selected_col = selected
+                # Đổi màu các ô cùng dòng, cùng cột
+                if i == selected_row or j == selected_col:
+                    color = (226, 235, 251)
+                # Đổi màu các ô cùng khối 3x3
+                if (i // 3 == selected_row // 3) and (j // 3 == selected_col // 3):
+                    color = (226, 235, 251)
+                # Đổi màu ô được chọn
+                if i == selected_row and j == selected_col:
+                    color = (187, 222, 251)
+            # Vẽ ô vuông
+            pygame.draw.rect(screen, color, (j * CELL_SIZE + 30, i * CELL_SIZE + 30, CELL_SIZE, CELL_SIZE))
             number = grid[i][j]
             if number != 0:  # Kiểm tra nếu ô không rỗng
                 # Đặt màu tương ứng dựa trên trạng thái của control_grid
                 if control_grid[i][j] == -1:
                     text_color = (0, 25, 51)  # Màu xám cho các ô không thể thay đổi
-                elif control_grid[i][j] == -2:
+                elif control_grid[i][j] == -2 or -3:
                     text_color = (0, 76, 153)  # Màu cho các số đã điền
+                elif control_grid[i][j] == -4:
+                    text_color = (255, 0, 0) # màu đỏ cho số điền sai
                 else:
                     text_color = (0, 0, 0)  # Màu đen cho các ô trống
 
@@ -128,7 +144,7 @@ def draw_numbers(screen):
                 text_rect = text_surf.get_rect(center=(j * 100 + 80, i * 100 + 80))  # Tính vị trí trung tâm
                 screen.blit(text_surf, text_rect)  # Vẽ số lên màn hình
 
-#
+
 GRID_SIZE = 9
 CELL_SIZE = 100  # Kích thước của mỗi ô lưới
 
@@ -175,11 +191,10 @@ def insert_into_grid(value, row, col):
 # nhận biết phím chức năng được bấm
 def get_clicked_circle(mouse_pos):
     click = pygame.mouse.get_pressed()
-
     # Danh sách chứa thông tin của các nút (tọa độ x, y, bán kính, tên nút)
     circle_buttons = [
         (1120, 100, 45, 'delete'),  # Tọa độ và bán kính của nút delete
-        (1320, 100, 45, 'return'),  # Tọa độ và bán kính của nút return
+        (1320, 100, 45, 'hint'),  # Tọa độ và bán kính của nút hint
         (1520, 100, 45, 'answer')     # Tọa độ và bán kính của nút idea
     ]
 
@@ -197,8 +212,9 @@ def get_clicked_circle(mouse_pos):
 # hàm test nút delete
 def change(row, col):
     if row is not None and col is not None:
-        grid[row][col] = 0
-        control_grid[row][col] = 0
+        if control_grid[row][col] == -2:
+            grid[row][col] = 0
+            control_grid[row][col] = 0
 
 # các hàm xử lý nút trò chơi mới
 def get_clicked_new_game(mouse_pos):
@@ -226,3 +242,56 @@ def set_new_game():
     control_grid = define_control_grid(grid)  # Cập nhật control_grid theo đề mới
 
 
+# Hàm giải đề
+N = 9
+
+def isSafe(row, col, num):
+    for x in range(9):
+        if grid[row][x] == num:
+            return False
+
+    for x in range(9):
+        if grid[x][col] == num:
+            return False
+
+    startRow = row - row % 3
+    startCol = col - col % 3
+    for i in range(3):
+        for j in range(3):
+            if grid[i + startRow][j + startCol] == num:
+                return False
+    return True
+
+# hàm đã được điền full:
+def check_full():
+    for row in range(0, 9):
+        for col in range(0, 9):
+            if grid[row][col] == 0:
+                return False
+    return True
+
+def solveSudoku(row, col):
+    global grid
+    if (row == N - 1 and col == N):
+        return True
+
+    if col == N:
+        row += 1
+        col = 0
+
+    if grid[row][col] > 0:
+        return solveSudoku(row, col + 1)
+    for num in range(1, N + 1, 1):
+        if isSafe(row, col, num):
+            grid[row][col] = num
+            control_grid[row][col] = -3
+            for i in range(0, 9):
+                for j in range(0, 9):
+                    if check_full():
+                        if control_grid[i][j] == -2:
+                            control_grid[i][j] = -3
+            if solveSudoku(row, col + 1):
+                return True
+
+        grid[row][col] = 0
+    return False

@@ -1,5 +1,5 @@
 import pygame
-from new import draw_number_and_new_game_button, control_grid
+from new import draw_number_and_new_game_button, control_grid, isSafe
 from new import draw_numbers
 from new import get_cell_index
 from new import get_clicked_number
@@ -8,6 +8,8 @@ from new import get_clicked_circle  # Hàm này để xóa giá trị từ lư�
 from new import get_clicked_new_game
 from new import change
 from new import set_new_game
+from new import solveSudoku
+from new import grid
 
 # Tạo pygame
 pygame.init()
@@ -35,16 +37,15 @@ running = True
 
 # Vòng lặp chính
 def desktop():
-    global running
-    row, col = None, None  # Khởi tạo row và col
-
+    row, col = None, None
+    cell_id =None
+    tmp =None
     while running:
         # Vẽ
         window.fill((255, 255, 255))  # Làm mới màn hình
         draw_grid()  # Vẽ lại lưới
         draw_number_and_new_game_button(window)
         draw_numbers(window)
-
         for event in pygame.event.get():
             # Sự kiện thoát game
             if event.type == pygame.QUIT:
@@ -53,37 +54,54 @@ def desktop():
 
             # Sự kiện chuột
             if event.type == pygame.MOUSEBUTTONDOWN:
-                # Phần 1: lấy vị trí của cell lưới
-                cell_id = get_cell_index(event.pos)  # Lấy chỉ số hàng và cột
-                if cell_id:  # Kiểm tra nếu cell_index hợp lệ
-                    row, col = cell_id
-                    print(f"Đã chọn ô ({row}, {col})")
+                mouse = pygame.mouse.get_pos()
+                if (930 > mouse[0] > 30 and 930 > mouse[1] > 30):
+                    cell_id = get_cell_index(pygame.mouse.get_pos())
+                    tmp = cell_id
+                else:
+                    # Phần 1: lấy vị trí của cell lưới
+                    # Lấy chỉ số hàng và cột
+                    if cell_id:  # Kiểm tra nếu cell_index hợp lệ
+                        print(f"Đã chọn ô ({cell_id[0]}, {cell_id[1]})")
+                        row, col = cell_id
 
-                # Phần 2: chọn số để thêm vào grid
-                value = get_clicked_number(event.pos)
-                if value:  # Kiểm tra nếu value không phải là None
-                    print(f"Chọn số: {value}")
-                    insert_into_grid(value, row, col)  # Điền giá trị vào ô
+                    # Phần 2: chọn số để thêm vào grid
+                    value = get_clicked_number(event.pos)
+                    if value:  # Kiểm tra nếu value không phải là None
+                        print(f"Chọn số: {value}")
+                        if isSafe(row, col, value):
+                            insert_into_grid(value, row, col)  # Điền giá trị vào ô
+                        else:
+                            pass
 
-                # Phần 3: kiểm tra click vào các nút delete, return, idea
-                mouse_pos = pygame.mouse.get_pos()  # Lấy tọa độ của chuột
-                button_clicked = get_clicked_circle(mouse_pos)  # Kiểm tra nút nào đã được click
-                if button_clicked:
-                    print(f"Đã bấm nút: {button_clicked}")
-                    if button_clicked == "delete":
-                        change(row, col)  # Gọi hàm để xóa giá trị
-                        print(f"Đã xóa giá trị tại ô ({row}, {col})")
-                    if button_clicked == "answer":
-                        # Xử lý sự kiện show đáp án ở đây
-                        pass
+                    # Phần 3: kiểm tra click vào các nút delete, return, idea
+                    mouse_pos = pygame.mouse.get_pos()  # Lấy tọa độ của chuột
+                    button_clicked = get_clicked_circle(mouse_pos)  # Kiểm tra nút nào đã được click
+                    if button_clicked:
+                        print(f"Đã bấm nút: {button_clicked}")
+                        if button_clicked == "delete":
+                            change(row, col)  # Gọi hàm để xóa giá trị
+                            print(f"Đã xóa giá trị tại ô ({row}, {col})")
+                        if button_clicked == "answer":
+                            if solveSudoku(0, 0):
+                                for i in range(0, 9):
+                                    for j in range(0, 9):
+                                        print(grid[i][j], end=' ')
+                                    print()
+                            else:
+                                print("no solution exists ")
+                        if button_clicked == "hint":
+                            pass # xóa cái pass này rồi viết thôi
+                            # Xử lý nút tròn gợi ý ở đây nè Dương
 
+                    new_game_clicked = get_clicked_new_game(event.pos)
+                    if new_game_clicked:
+                        print("clicked new game button")
+                        # Thực hiện hành động khi nhấn nút New Game
+                        set_new_game()
 
-                new_game_clicked = get_clicked_new_game(event.pos)
-                if new_game_clicked:
-                    print("clicked new game button")
-                    # Thực hiện hành động khi nhấn nút New Game
-                    set_new_game()
-
+        draw_numbers(window, tmp)
+        draw_grid()
         # Cập nhật hiển thị
         pygame.display.update()
 
