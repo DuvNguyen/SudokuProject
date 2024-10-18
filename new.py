@@ -133,7 +133,7 @@ def draw_numbers(screen,selected = None):
                 # Đặt màu tương ứng dựa trên trạng thái của control_grid
                 if control_grid[i][j] == -1:
                     text_color = (0, 25, 51)  # Màu xám cho các ô không thể thay đổi
-                elif control_grid[i][j] == -2 or -3:
+                elif control_grid[i][j] == -2 or control_grid[i][j] == -3:
                     text_color = (0, 76, 153)  # Màu cho các số đã điền
                 elif control_grid[i][j] == -4:
                     text_color = (255, 0, 0) # màu đỏ cho số điền sai
@@ -180,13 +180,14 @@ def get_clicked_number(mouse):
     return None  # Nếu không nhấn vào nút nào, trả về None
 
 # hàm thêm lên ma trận lưới
-def insert_into_grid(value, row, col):
+def insert_into_grid(value, row, col, valid):
     if row is not None and col is not None:
-        if control_grid[row][col] == 0:
+        if control_grid[row][col] == 0 and valid:
             grid[row][col] = value
             control_grid[row][col] = -2
-        else:
-            pass
+        elif control_grid[row][col] == 0 and not valid:
+            grid[row][col] = value
+            control_grid[row][col] = -4
 
 # nhận biết phím chức năng được bấm
 def get_clicked_circle(mouse_pos):
@@ -242,7 +243,8 @@ def set_new_game():
     control_grid = define_control_grid(grid)  # Cập nhật control_grid theo đề mới
 
 
-# Hàm giải đề
+# Các hàm giải đề
+
 N = 9
 
 def isSafe(row, col, num):
@@ -262,7 +264,7 @@ def isSafe(row, col, num):
                 return False
     return True
 
-# hàm đã được điền full:
+# hàm kiểm tra xem lưới đã được điên full hay chưa:
 def check_full():
     for row in range(0, 9):
         for col in range(0, 9):
@@ -295,3 +297,46 @@ def solveSudoku(row, col):
 
         grid[row][col] = 0
     return False
+
+# Hàm vẽ high_light(chưa dùng được):
+def highlight_selected_cell(window, row, col):
+    if row is not None and col is not None:
+        pygame.draw.rect(window, (255, 0, 0), (30 + col * 100, 30 + row * 100, 100, 100), 3)
+
+
+# Kiểm tra xem lưới có đầy và đúng hay không
+def check_victory():
+    for row in range(9):
+        for col in range(9):
+            if grid[row][col] == 0 or not isSafe(row, col, grid[row][col]):
+                return False  # Lưới chưa đầy hoặc không đúng
+    return True  # Lưới đã đầy và đúng
+
+
+import pygame
+import time
+
+
+def display_win(window, waiting):
+    # Tạo phông chữ và thông báo "You Win"
+    font = pygame.font.SysFont('Arial', 100)
+    text = font.render('You Win!', True, (0, 255, 0))  # Màu xanh lá cây
+
+    # Hiển thị "You Win" ở bên phải màn hình
+    window.blit(text, (1350, 100))  # Vị trí để hiển thị thông báo "You Win"
+    pygame.display.update()
+
+    # Thực hiện vòng lặp hiển thị khi waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+        # Hiển thị thông báo "You Win" trong 5 giây
+        time.sleep(5)
+        waiting = False
+
+
+
+

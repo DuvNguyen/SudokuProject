@@ -1,4 +1,16 @@
-from new import *
+import pygame
+from new import draw_number_and_new_game_button, control_grid, isSafe
+from new import draw_numbers
+from new import get_cell_index
+from new import get_clicked_number
+from new import insert_into_grid
+from new import get_clicked_circle  # Hàm này để xóa giá trị từ lưới
+from new import get_clicked_new_game
+from new import change
+from new import set_new_game
+from new import solveSudoku
+from new import grid
+from new import highlight_selected_cell
 
 # Tạo pygame
 pygame.init()
@@ -9,9 +21,8 @@ height = 1000
 color = (255, 255, 255)
 window = pygame.display.set_mode((width, height))
 window.fill(color)
-pygame.display.set_caption("Sudoku Game")
-# Vẽ lưới
 
+# Vẽ lưới
 def draw_grid():
     for i in range(0, 10):
         pygame.draw.line(window, (198, 204, 206), (30, (i * 100) + 30), (930, (i * 100 + 30)), 2)
@@ -59,7 +70,12 @@ def desktop():
                     value = get_clicked_number(event.pos)
                     if value:  # Kiểm tra nếu value không phải là None
                         print(f"Chọn số: {value}")
-                        insert_into_grid(value, row, col)  # Điền giá trị vào ô
+
+                        if isSafe(row, col, value):
+                            valid = True
+                        else:
+                            valid = False
+                        insert_into_grid(value, row, col, valid)  # Điền giá trị vào ô
 
                     # Phần 3: kiểm tra click vào các nút delete, return, idea
                     mouse_pos = pygame.mouse.get_pos()  # Lấy tọa độ của chuột
@@ -69,6 +85,17 @@ def desktop():
                         if button_clicked == "delete":
                             change(row, col)  # Gọi hàm để xóa giá trị
                             print(f"Đã xóa giá trị tại ô ({row}, {col})")
+                        if button_clicked == "answer":
+                            if solveSudoku(0, 0):
+                                for i in range(0, 9):
+                                    for j in range(0, 9):
+                                        print(grid[i][j], end=' ')
+                                    print()
+                            else:
+                                print("no solution exists ")
+                        if button_clicked == "hint":
+                            # highlight_selected_cell(window, 1, 1)
+                            pass
 
                     new_game_clicked = get_clicked_new_game(event.pos)
                     if new_game_clicked:

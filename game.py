@@ -10,6 +10,7 @@ from new import change
 from new import set_new_game
 from new import solveSudoku
 from new import grid
+from new import highlight_selected_cell
 
 # Tạo pygame
 pygame.init()
@@ -69,10 +70,12 @@ def desktop():
                     value = get_clicked_number(event.pos)
                     if value:  # Kiểm tra nếu value không phải là None
                         print(f"Chọn số: {value}")
+
                         if isSafe(row, col, value):
-                            insert_into_grid(value, row, col)  # Điền giá trị vào ô
+                            valid = True
                         else:
-                            pass
+                            valid = False
+                        insert_into_grid(value, row, col, valid)  # Điền giá trị vào ô
 
                     # Phần 3: kiểm tra click vào các nút delete, return, idea
                     mouse_pos = pygame.mouse.get_pos()  # Lấy tọa độ của chuột
@@ -91,8 +94,8 @@ def desktop():
                             else:
                                 print("no solution exists ")
                         if button_clicked == "hint":
-                            pass # xóa cái pass này rồi viết thôi
-                            # Xử lý nút tròn gợi ý ở đây nè Dương
+                            # highlight_selected_cell(window, 1, 1)
+                            pass
 
                     new_game_clicked = get_clicked_new_game(event.pos)
                     if new_game_clicked:
